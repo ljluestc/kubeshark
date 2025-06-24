@@ -1,0 +1,4 @@
+#!/bin/bash
+# Run these commands to fix the dependency issues
+go mod tidy
+cd cmd/worker && go test -v
