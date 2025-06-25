@@ -91,6 +91,17 @@ kubeshark pcapdump --time 5m
 ```
 > Read more [here](https://docs.kubeshark.co/en/pcapdump).
 
+## Half-Connections
+
+Kubeshark can now display both fully paired and half-connections (incomplete transactions where either a request or response is missing).  
+To enable this feature, set the following in your Helm values:
+
+```yaml
+showHalfConnections: true
+```
+
+This will expose half-connections in the UI and API when enabled.
+
 ## Contributing
 
 We :heart: pull requests! See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution guide.

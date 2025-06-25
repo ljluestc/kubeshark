@@ -229,6 +229,16 @@ tap:
       - SYS_PTRACE
       - SYS_RESOURCE
       - IPC_LOCK
+      hub:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE
+      front:
+        drop:
+        - ALL
+        add:
+        - NET_BIND_SERVICE
   mountBpf: true
 logs:
   file: ""

@@ -12,8 +12,17 @@ import (
 type ConnectionService interface {
 	AddRequest(connectionID, protocol, source, target string, timestamp time.Time, request interface{}) bool
 	AddResponse(connectionID string, response interface{}) bool
-	TrackHalfConnection(connectionID, connectionType string)
+	TrackHalfConnection(connectionID, connectionType string, timestamp time.Time, data interface{})
 	AddResponseOnly(connectionID, protocol, source, target string, timestamp time.Time, response interface{})
+	GetHalfConnections() []HalfConnection
+}
+
+// HalfConnection represents an incomplete transaction with either request or response missing
+type HalfConnection struct {
+	ConnectionID string
+	Type         string // "request" or "response"
+	Timestamp    time.Time
+	Data         interface{}
 }
 
 // Logger defines the interface for logging
@@ -117,7 +126,7 @@ func (p *PacketProcessor) ProcessPacket(packet gopacket.Packet) {
 		)
 		if !added {
 			// Request without matching response - track as half-connection
-			p.connectionService.TrackHalfConnection(connectionID, "request")
+			p.connectionService.TrackHalfConnection(connectionID, "request", timestamp, request)
 			p.logger.Debug("Tracked request-only half-connection", "connectionID", connectionID, "type", "request")
 		}
 	} else {
@@ -137,7 +146,7 @@ func (p *PacketProcessor) ProcessPacket(packet gopacket.Packet) {
 		success := p.connectionService.AddResponse(connectionID, response)
 		if !success {
 			// Response without matching request - track as half-connection
-			p.connectionService.TrackHalfConnection(connectionID, "response")
+			p.connectionService.TrackHalfConnection(connectionID, "response", timestamp, response)
 			// Also create a response-only connection entry
 			p.connectionService.AddResponseOnly(connectionID, protocol, source, target, timestamp, response)
 			p.logger.Debug("Tracked response-only half-connection", "connectionID", connectionID, "type", "response")

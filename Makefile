@@ -72,6 +72,9 @@ clean: ## Clean all build artifacts.
 	rm -rf ./bin/*
 
 test: ## Run cli tests.
+	@go test ./... -race
+
+test-with-coverage: ## Run cli tests with coverage.
 	@go test ./... -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic
 
 lint: ## Lint the source code.

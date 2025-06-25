@@ -6,6 +6,12 @@
               - ALL
             add:
               - NET_BIND_SERVICE
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_BIND_SERVICE
         env:
           - name: KUBESHARK_CONFIG
             value: {{ template "kubeshark.config" . }}

@@ -1,4 +1,27 @@
 #!/bin/bash
-# Run these commands to fix the dependency issues
+# This script provides commands to fix the build issues in the Kubeshark project
+
+# Step 1: Fix the main dependency issues
 go mod tidy
+
+# Step 2: Fix the securityContext in Helm chart
+# Look for duplicate securityContext field in helm-chart/templates/08-front-deployment.yaml
+# and remove one of them
+
+# Step 3: Fix the tapConfig.go issues:
+# 1. Add SecurityContext type definition at the top of the file
+# 2. Rename the duplicate Hub field to HubSecurity
+# 3. Fix the initialization of SecurityContext objects
+
+# Step 4: Verify the fixes
+go build ./config/configStructs/...
+
+# Step 5: Run tests in specific packages to isolate any remaining issues
 cd cmd/worker && go test -v
+cd ../..
+
+# Step 6: Build the project
+make build
+
+# If you still have issues with packet_processor_test.go:
+# Check for duplicate test function definitions and rename them

@@ -53,7 +53,7 @@ func (p *PacketProcessor) ProcessPacket(packet gopacket.Packet) {
 		success := p.connectionService.AddRequest(connectionID, protocol, source, target, timestamp, request)
 		if !success {
 			// Request without matching response - mark as half-connection
-			p.connectionService.TrackHalfConnection(connectionID, "request")
+			p.connectionService.TrackHalfConnection(connectionID, "request", timestamp, request)
 			p.logger.Debug("Tracked request-only half-connection", "connectionID", connectionID)
 		}
 	} else {
@@ -62,7 +62,7 @@ func (p *PacketProcessor) ProcessPacket(packet gopacket.Packet) {
 		success := p.connectionService.AddResponse(connectionID, response)
 		if !success {
 			// Response without matching request - create half-connection
-			p.connectionService.TrackHalfConnection(connectionID, "response")
+			p.connectionService.TrackHalfConnection(connectionID, "response", timestamp, response)
 			p.connectionService.AddResponseOnly(connectionID, protocol, source, target, timestamp, response)
 			p.logger.Debug("Tracked response-only half-connection", "connectionID", connectionID)
 		}

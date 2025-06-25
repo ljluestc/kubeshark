@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 // ConnectionStatus represents the status of a connection
 type ConnectionStatus string
 
@@ -20,5 +22,13 @@ type Connection struct {
 	Timestamp int64            `json:"timestamp"`
 	Request   interface{}      `json:"request"`
 	Response  interface{}      `json:"response"`
-	Status    ConnectionStatus `json:"status"`
+	Status    ConnectionStatus `json:"status,omitempty"`
+}
+
+// HalfConnection represents an incomplete transaction
+type HalfConnection struct {
+	ConnectionID string      `json:"connectionId"`
+	Type         string      `json:"type"` // "request" or "response"
+	Timestamp    time.Time   `json:"timestamp"`
+	Data         interface{} `json:"data"`
 }

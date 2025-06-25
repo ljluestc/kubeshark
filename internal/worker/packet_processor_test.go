@@ -37,18 +37,25 @@ func (m *MockConnectionService) GetConnections(includeHalf bool) ([]*models.Conn
 	return args.Get(0).([]*models.Connection), args.Error(1)
 }
 
+func (m *MockConnectionService) GetHalfConnections() []interface{} {
+	args := m.Called()
+	return args.Get(0).([]interface{})
+}
+
 // MockLogger implements the Logger interface for testing
 type MockLogger struct {
 	mock.Mock
 }
 
 func (m *MockLogger) Debug(msg string, args ...interface{}) {
-	// When testify/mock is used with variadic args, we need to be careful about how we pass them
-	// The implementation calls Debug with separate arguments, not as a slice
+	// Always call with expanded arguments for compatibility with test expectations
 	if len(args) == 2 && args[0] == "connectionID" {
 		m.Called(msg, "connectionID", args[1])
+	} else if len(args) == 1 {
+		// Some tests may call with a single []interface{}
+		m.Called(msg, args[0])
 	} else {
-		m.Called(msg, args)
+		m.Called(msg)
 	}
 }
 

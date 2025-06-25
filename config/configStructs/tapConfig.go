@@ -16,6 +16,7 @@ const (
 	ProxyFrontPortLabel          = "proxy-front-port"
 	ProxyHubPortLabel            = "proxy-hub-port"
 	ProxyHostLabel               = "proxy-host"
+	ShowHalfConnectionsLabel     = "show-half-connections"
 	NamespacesLabel              = "namespaces"
 	ExcludedNamespacesLabel      = "excludedNamespaces"
 	ReleaseNamespaceLabel        = "release-namespace"
@@ -295,6 +296,7 @@ type TapConfig struct {
 	Proxy                          ProxyConfig             `yaml:"proxy" json:"proxy"`
 	PodRegexStr                    string                  `yaml:"regex" json:"regex" default:".*"`
 	Namespaces                     []string                `yaml:"namespaces" json:"namespaces" default:"[]"`
+	ShowHalfConnections            bool                    `yaml:"showHalfConnections" json:"showHalfConnections" default:"false"`
 	ExcludedNamespaces             []string                `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
 	BpfOverride                    string                  `yaml:"bpfOverride" json:"bpfOverride" default:""`
 	Stopped                        bool                    `yaml:"stopped" json:"stopped" default:"false"`

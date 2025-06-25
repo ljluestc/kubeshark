@@ -22,11 +22,20 @@
     background-color: #fff8e1;
 }
 
+.half-connection.request_only {
+    border-left: 3px solid #e67e22;
+}
+
+.half-connection.response_only {
+    border-left: 3px solid #00acc1;
+}
+
 .connection-status {
     font-size: 0.8em;
     padding: 2px 6px;
     border-radius: 4px;
     font-weight: bold;
+    margin-left: auto;
 }
 
 .connection-status.request_only {

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubeshark.fullname" . }}-front
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+    app.kubernetes.io/component: front
+spec:
+  replicas: {{ .Values.front.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kubeshark.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: front
+  template:
+    metadata:
+      {{- with .Values.front.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+                env:
+                - name: SHOW_HALF_CONNECTIONS
+                  value: {{ .Values.showHalfConnections | quote }}
+      labels:
+        {{- include "kubeshark.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: front
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-front
+          image: "{{ .Values.front.image.repository }}:{{ .Values.front.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.front.image.pullPolicy }}
+          env:
+            - name: API_HOST
+              value: "{{ include "kubeshark.fullname" . }}-hub"
+            - name: API_PORT
+              value: {{ .Values.hub.service.port | quote }}
+            - name: TZ
+              value: {{ .Values.timezone }}
+            - name: SHOW_HALF_CONNECTIONS
+              value: {{ .Values.showHalfConnections | quote }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP

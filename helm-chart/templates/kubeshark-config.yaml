@@ -12,6 +12,26 @@
     hub:
       capabilities:
         drop:
+  {{- range .Values.tap.securityContext.capabilities.hub.drop }}
+          - {{ . }}
+  {{- end }}
+        add:
+  {{- range .Values.tap.securityContext.capabilities.hub.add }}
+          - {{ . }}
+  {{- end }}
+    front:
+      capabilities:
+        drop:
+  {{- range .Values.tap.securityContext.capabilities.front.drop }}
+          - {{ . }}
+  {{- end }}
+        add:
+  {{- range .Values.tap.securityContext.capabilities.front.add }}
+          - {{ . }}
+  {{- end }}
+    hub:
+      capabilities:
+        drop:
 {{- range .Values.tap.securityContext.hub.capabilities.drop }}
           - {{ . }}
 {{- end }}
