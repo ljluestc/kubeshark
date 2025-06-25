@@ -1,0 +1,11 @@
+        image: {{ .Values.hub.docker.registry }}/{{ .Values.hub.docker.image }}:{{ .Values.hub.docker.tag }}
+        imagePullPolicy: {{ .Values.hub.docker.imagePullPolicy }}
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_BIND_SERVICE
+        env:
+          - name: KUBESHARK_CONFIG
+            value: {{ template "kubeshark.config" . }}

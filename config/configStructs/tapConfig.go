@@ -124,9 +124,11 @@ type DnsConfigOption struct {
 }
 
 type ResourcesConfig struct {
-	Hub     ResourceRequirementsHub    `yaml:"hub" json:"hub"`
-	Sniffer ResourceRequirementsWorker `yaml:"sniffer" json:"sniffer"`
-	Tracer  ResourceRequirementsWorker `yaml:"tracer" json:"tracer"`
+	Hub         ResourceRequirementsHub    `yaml:"hub" json:"hub"`
+	Sniffer     ResourceRequirementsWorker `yaml:"sniffer" json:"sniffer"`
+	Tracer      ResourceRequirementsWorker `yaml:"tracer" json:"tracer"`
+	HubSecurity SecurityContext            `json:"hubSecurity" yaml:"hubSecurity"`
+	Front       SecurityContext            `json:"front" yaml:"front"`
 }
 
 type ProbesConfig struct {
@@ -190,6 +192,8 @@ type IngressConfig struct {
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
 	TLS         []networking.IngressTLS `yaml:"tls" json:"tls" default:"[]"`
 	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
+	Hub         SecurityContext         `json:"hub" yaml:"hub"`
+	Front       SecurityContext         `json:"front" yaml:"front"`
 }
 
 type RoutingConfig struct {
@@ -284,18 +288,6 @@ type SecurityContextConfig struct {
 	AppArmorProfile AppArmorProfileConfig `yaml:"appArmorProfile" json:"appArmorProfile"`
 	SeLinuxOptions  SeLinuxOptionsConfig  `yaml:"seLinuxOptions" json:"seLinuxOptions"`
 	Capabilities    CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
-}
-
-type AppArmorProfileConfig struct {
-	Type             string `yaml:"type" json:"type"`
-	LocalhostProfile string `yaml:"localhostProfile" json:"localhostProfile"`
-}
-
-type SeLinuxOptionsConfig struct {
-	Level string `yaml:"level" json:"level"`
-	Role  string `yaml:"role" json:"role"`
-	Type  string `yaml:"type" json:"type"`
-	User  string `yaml:"user" json:"user"`
 }
 
 type TapConfig struct {

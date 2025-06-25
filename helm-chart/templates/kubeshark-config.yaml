@@ -1,0 +1,31 @@
+  securityContext:
+    worker:
+      capabilities:
+        drop:
+{{- range .Values.tap.securityContext.worker.capabilities.drop }}
+          - {{ . }}
+{{- end }}
+        add:
+{{- range .Values.tap.securityContext.worker.capabilities.add }}
+          - {{ . }}
+{{- end }}
+    hub:
+      capabilities:
+        drop:
+{{- range .Values.tap.securityContext.hub.capabilities.drop }}
+          - {{ . }}
+{{- end }}
+        add:
+{{- range .Values.tap.securityContext.hub.capabilities.add }}
+          - {{ . }}
+{{- end }}
+    front:
+      capabilities:
+        drop:
+{{- range .Values.tap.securityContext.front.capabilities.drop }}
+          - {{ . }}
+{{- end }}
+        add:
+{{- range .Values.tap.securityContext.front.capabilities.add }}
+          - {{ . }}
+{{- end }}

@@ -61,6 +61,22 @@ func CreateDefaultConfig() ConfigStruct {
 						},
 					},
 				},
+				Hub: configStructs.SecurityContext{
+					Capabilities: map[string][]string{
+						"drop": {"ALL"},
+						"add": {
+							"NET_BIND_SERVICE",
+						},
+					},
+				},
+				Front: configStructs.SecurityContext{
+					Capabilities: map[string][]string{
+						"drop": {"ALL"},
+						"add": {
+							"NET_BIND_SERVICE",
+						},
+					},
+				},
 			},
 			Tolerations: configStructs.TolerationsConfig{
 				Workers: []v1.Toleration{
@@ -117,6 +133,22 @@ func CreateDefaultConfig() ConfigStruct {
 							CanUpdateTargetedPods:   true,
 							CanStopTrafficCapturing: true,
 							ShowAdminConsoleLink:    true,
+						},
+					},
+				},
+				Hub: configStructs.SecurityContext{
+					Capabilities: map[string][]string{
+						"drop": {"ALL"},
+						"add": {
+							"NET_BIND_SERVICE",
+						},
+					},
+				},
+				Front: configStructs.SecurityContext{
+					Capabilities: map[string][]string{
+						"drop": {"ALL"},
+						"add": {
+							"NET_BIND_SERVICE",
 						},
 					},
 				},

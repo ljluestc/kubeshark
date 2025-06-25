@@ -1,0 +1,52 @@
+.connection-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.connection-item:hover {
+    background-color: #f5f5f5;
+}
+
+.connection-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+/* Half-connection styles */
+.half-connection {
+    border-left: 3px solid #f5a623;
+    background-color: #fff8e1;
+}
+
+.connection-status {
+    font-size: 0.8em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.connection-status.request_only {
+    background-color: #ffeee0;
+    color: #e67e22;
+}
+
+.connection-status.response_only {
+    background-color: #e0f7fa;
+    color: #00acc1;
+}
+
+.half-connections-toggle {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+.half-connections-toggle input {
+    margin-right: 5px;
+}

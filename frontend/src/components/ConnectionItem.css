@@ -1,0 +1,73 @@
+.connection-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
+.connection-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.connection-id {
+    font-weight: bold;
+}
+
+.connection-timestamp {
+    color: #777;
+}
+
+.connection-status {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.connection-details {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.connection-source, .connection-target {
+    flex: 1;
+}
+
+.connection-arrow {
+    margin: 0 10px;
+    color: #666;
+}
+
+.connection-protocol {
+    font-size: 0.8em;
+    color: #555;
+    text-align: right;
+}
+
+/* Half-connection styles */
+.half-connection {
+    border-left: 3px solid;
+}
+
+.half-connection.response {
+    border-left-color: #f39c12;
+    background-color: #fef9e7;
+}
+
+.half-connection.request {
+    border-left-color: #3498db;
+    background-color: #ebf5fb;
+}
+
+.half-connection .connection-status {
+    background-color: #f39c12;
+    color: white;
+}
+
+.half-connection.request .connection-status {
+    background-color: #3498db;
+}
