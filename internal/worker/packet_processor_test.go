@@ -1,11 +1,14 @@
 package worker
 
 import (
+	"github.com/kubeshark/kubeshark/internal/models"
+	"net"
 	"testing"
 	"time"
 
 	"github.com/google/gopacket"
-	"github.com/kubeshark/kubeshark/internal/models"
+	"github.com/google/gopacket/layers"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -44,18 +47,18 @@ func (m *MockConnectionService) GetHalfConnections() []interface{} {
 
 // MockLogger implements the Logger interface for testing
 type MockLogger struct {
-	mock.Mock
+	logs []string
 }
 
-func (m *MockLogger) Debug(msg string, args ...interface{}) {
+func (m *MockLogger) Debug(msg string, keysAndValues ...interface{}) {
 	// Always call with expanded arguments for compatibility with test expectations
-	if len(args) == 2 && args[0] == "connectionID" {
-		m.Called(msg, "connectionID", args[1])
-	} else if len(args) == 1 {
+	if len(keysAndValues) == 2 && keysAndValues[0] == "connectionID" {
+		m.logs = append(m.logs, msg)
+	} else if len(keysAndValues) == 1 {
 		// Some tests may call with a single []interface{}
-		m.Called(msg, args[0])
+		m.logs = append(m.logs, msg)
 	} else {
-		m.Called(msg)
+		m.logs = append(m.logs, msg)
 	}
 }
 
@@ -206,4 +209,125 @@ func TestProcessCompleteConnection(t *testing.T) {
 
 	// Verify expectations
 	mockCS.AssertExpectations(t)
+}
+
+// InMemoryConnectionService implements ConnectionService with in-memory storage for testing half-connections
+type InMemoryConnectionService struct {
+	requests        map[string]bool
+	responses       map[string]bool
+	halfConnections []struct {
+		ConnectionID string
+		Type         string
+		Timestamp    time.Time
+		Data         interface{}
+	}
+}
+
+func NewInMemoryConnectionService() *InMemoryConnectionService {
+	return &InMemoryConnectionService{
+		requests:  make(map[string]bool),
+		responses: make(map[string]bool),
+	}
+}
+
+func (m *InMemoryConnectionService) AddRequest(connectionID, protocol, source, target string, timestamp time.Time, request interface{}) bool {
+	m.requests[connectionID] = true
+	return true
+}
+
+func (m *InMemoryConnectionService) AddResponse(connectionID string, response interface{}) bool {
+	m.responses[connectionID] = true
+	return true
+}
+
+func (m *InMemoryConnectionService) TrackHalfConnection(connectionID, connectionType string, timestamp time.Time, data interface{}) {
+	m.halfConnections = append(m.halfConnections, struct {
+		ConnectionID string
+		Type         string
+		Timestamp    time.Time
+		Data         interface{}
+	}{
+		ConnectionID: connectionID,
+		Type:         connectionType,
+		Timestamp:    timestamp,
+		Data:         data,
+	})
+}
+
+func (m *InMemoryConnectionService) GetHalfConnections() []struct {
+	ConnectionID string
+	Type         string
+	Timestamp    time.Time
+	Data         interface{}
+} {
+	return append([]struct {
+		ConnectionID string
+		Type         string
+		Timestamp    time.Time
+		Data         interface{}
+	}{}, m.halfConnections...)
+}
+
+func TestPacketProcessorHalfConnections(t *testing.T) {
+	connService := NewInMemoryConnectionService()
+	logger := &MockLogger{}
+	processor := NewPacketProcessor(connService, logger)
+
+	// Create a test packet (HTTP request)
+	tcpLayer := &layers.TCP{
+		SrcPort: layers.TCPPort(12345),
+		DstPort: layers.TCPPort(80),
+	}
+	ipv4Layer := &layers.IPv4{
+		SrcIP: net.ParseIP("192.168.1.1"),
+		DstIP: net.ParseIP("10.0.0.1"),
+	}
+	appLayer := &gopacket.Payload{
+		[]byte("GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"),
+	}
+	opts := gopacket.SerializeOptions{}
+	buffer := gopacket.NewSerializeBuffer()
+	err := gopacket.SerializeLayers(buffer, opts, ipv4Layer, tcpLayer, appLayer)
+	assert.NoError(t, err)
+
+	packet := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeIPv4, gopacket.Default)
+	timestamp := time.Now()
+	packet.Metadata().Timestamp = timestamp
+
+	t.Run("RequestHalfConnection", func(t *testing.T) {
+		processor.processPacket(packet)
+		connID := "192.168.1.1:12345-10.0.0.1:80"
+		assert.True(t, connService.requests[connID], "Request should be added")
+		halfConns := connService.GetHalfConnections()
+		assert.Len(t, halfConns, 1, "Should track one half-connection")
+		assert.Equal(t, connID, halfConns[0].ConnectionID)
+		assert.Equal(t, "request", halfConns[0].Type)
+		assert.Equal(t, timestamp, halfConns[0].Timestamp)
+		assert.Equal(t, string(appLayer.Payload()), halfConns[0].Data)
+		assert.Contains(t, logger.logs, "Tracked request-only half-connection")
+	})
+
+	t.Run("ResponseHalfConnection", func(t *testing.T) {
+		appLayer := &gopacket.Payload{
+			[]byte("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"),
+		}
+		buffer := gopacket.NewSerializeBuffer()
+		err := gopacket.SerializeLayers(buffer, opts, ipv4Layer, tcpLayer, appLayer)
+		assert.NoError(t, err)
+
+		responsePacket := gopacket.NewPacket(buffer.Bytes(), layers.LayerTypeIPv4, gopacket.Default)
+		responseTimestamp := time.Now()
+		responsePacket.Metadata().Timestamp = responseTimestamp
+
+		processor.processPacket(responsePacket)
+		connID := "192.168.1.1:12345-10.0.0.1:80"
+		assert.True(t, connService.responses[connID], "Response should be added")
+		halfConns := connService.GetHalfConnections()
+		assert.Len(t, halfConns, 2, "Should track two half-connections")
+		assert.Equal(t, connID, halfConns[1].ConnectionID)
+		assert.Equal(t, "response", halfConns[1].Type)
+		assert.Equal(t, responseTimestamp, halfConns[1].Timestamp)
+		assert.Equal(t, string(appLayer.Payload()), halfConns[1].Data)
+		assert.Contains(t, logger.logs, "Tracked response-only half-connection")
+	})
 }
