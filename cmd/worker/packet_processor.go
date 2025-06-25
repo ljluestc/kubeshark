@@ -64,6 +64,10 @@ func (p *PacketProcessor) ProcessPacket(packet gopacket.Packet) {
 		connectionID = p.generateConnectionID(packet)
 	}
 
+	if connectionID == "" {
+		return
+	}
+
 	if p.DetermineIfRequest != nil {
 		isRequest = p.DetermineIfRequest(packet)
 	} else {
@@ -114,7 +118,7 @@ func (p *PacketProcessor) ProcessPacket(packet gopacket.Packet) {
 		if !added {
 			// Request without matching response - track as half-connection
 			p.connectionService.TrackHalfConnection(connectionID, "request")
-			p.logger.Debug("Tracked request-only half-connection", "connectionID", connectionID)
+			p.logger.Debug("Tracked request-only half-connection", "connectionID", connectionID, "type", "request")
 		}
 	} else {
 		// Process response
@@ -125,12 +129,18 @@ func (p *PacketProcessor) ProcessPacket(packet gopacket.Packet) {
 			response = p.extractResponseData(packet)
 		}
 
+		if response == nil {
+			p.logger.Debug("Skipping empty response", "connectionID", connectionID)
+			return
+		}
+
 		success := p.connectionService.AddResponse(connectionID, response)
 		if !success {
 			// Response without matching request - track as half-connection
+			p.connectionService.TrackHalfConnection(connectionID, "response")
 			// Also create a response-only connection entry
 			p.connectionService.AddResponseOnly(connectionID, protocol, source, target, timestamp, response)
-			p.logger.Debug("Tracked response-only half-connection", "connectionID", connectionID)
+			p.logger.Debug("Tracked response-only half-connection", "connectionID", connectionID, "type", "response")
 		}
 	}
 }
@@ -257,32 +267,6 @@ func (p *PacketProcessor) getTimestamp(packet gopacket.Packet) time.Time {
 		return metadata.Timestamp
 	}
 	return time.Now()
-}
-
-// ProcessPacket processes a network packet and handles both request and response flows
-// This is the existing generateConnectionID method
-func (p *PacketProcessor) generateConnectionID(packet gopacket.Packet) string {
-	ipLayer := packet.NetworkLayer()
-	if ipLayer == nil {
-		return ""
-	}
-
-	tcpLayer := packet.TransportLayer()
-	if tcpLayer == nil {
-		return ""
-	}
-
-	ip, ok := ipLayer.(*layers.IPv4)
-	if !ok {
-		return ""
-	}
-
-	tcp, ok := tcpLayer.(*layers.TCP)
-	if !ok {
-		return ""
-	}
-
-	return fmt.Sprintf("%s:%d-%s:%d", ip.SrcIP, tcp.SrcPort, ip.DstIP, tcp.DstPort)
 }
 
 // Helper function to extract source and target endpoints from a packet
